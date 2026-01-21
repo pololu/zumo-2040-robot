@@ -16,7 +16,7 @@ import time
 
 motors = robot.Motors()
 button_a = robot.ButtonA()
-button_c = robot.ButtonC()
+button_b = robot.ButtonB()
 display = robot.Display()
 yellow_led = robot.YellowLED()
 
@@ -57,10 +57,11 @@ def draw_text():
     else:
         display.text("A: Start motors", 0, 0, 1)
     display.text(f"Angle:", 0, 32, 1)
+    display.text("Press B to exit", 0, 56)
 
 draw_text()
 
-while True:
+while not button_b.check():
     # Update the angle and the turn rate.
     if imu.gyro.data_ready():
         imu.gyro.read()
@@ -99,3 +100,6 @@ while True:
         motors.off()
 
     yellow_led.value(drive_motors)
+
+motors.off()
+yellow_led.off()

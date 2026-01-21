@@ -12,6 +12,7 @@ angle_to_turn = 90
 motors = robot.Motors()
 encoders = robot.Encoders()
 button_a = robot.ButtonA()
+button_b = robot.ButtonB()
 button_c = robot.ButtonC()
 display = robot.Display()
 yellow_led = robot.YellowLED()
@@ -42,6 +43,7 @@ def draw_text():
     else:
         display.text(f"A: Turn {angle_to_turn} deg", 0, 0, 1)
         display.text(f"C: Turn {-angle_to_turn} deg", 0, 8, 1)
+    display.text("Press B to exit", 0, 56)
     display.text(f"Angle:", 0, 32, 1)
 
 def handle_turn_or_stop(button, angle):
@@ -78,6 +80,10 @@ while True:
         handle_turn_or_stop(button_a, angle_to_turn)
     if button_c.check() == True:
         handle_turn_or_stop(button_c, -angle_to_turn)
+
+    if button_b.check() == True:
+        motors.off()
+        break
 
     # Decide whether to stop the motors.
     if drive_motors:

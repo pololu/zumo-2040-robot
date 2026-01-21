@@ -81,10 +81,15 @@ while True:
 
     display.fill_rect(0, 40, 128, 24, 0)
 
-    display.fill_rect(36, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
-    display.fill_rect(48, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
-    display.fill_rect(60, 64-int(line[2]*scale), 8, int(line[2]*scale), 1)
-    display.fill_rect(72, 64-int(line[3]*scale), 8, int(line[3]*scale), 1)
-    display.fill_rect(84, 64-int(line[4]*scale), 8, int(line[4]*scale), 1)
+    if button_b.is_long_pressed():
+        break
+    elif button_b.is_pressed():
+        display.text("Hold B to exit", 0, 56)
+    else:
+        display.fill_rect(36, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
+        display.fill_rect(48, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
+        display.fill_rect(60, 64-int(line[2]*scale), 8, int(line[2]*scale), 1)
+        display.fill_rect(72, 64-int(line[3]*scale), 8, int(line[3]*scale), 1)
+        display.fill_rect(84, 64-int(line[4]*scale), 8, int(line[4]*scale), 1)
 
     display.show()

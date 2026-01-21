@@ -5,15 +5,17 @@ from array import array
 
 proximity_sensors = robot.ProximitySensors()
 display = robot.Display()
+button_b = robot.ButtonB()
 count = 0
 
-while True:
+while not button_b.check():
     start = time.ticks_us()
     proximity_sensors.read()
     stop = time.ticks_us()
 
     display.fill(0)
     display.text("{:.1f}ms".format(time.ticks_diff(stop, start) / 1000), 0, 0)
+    display.text("<B", 112, 0)
     count = 0
 
     readings = [

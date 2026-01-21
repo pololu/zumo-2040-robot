@@ -9,6 +9,7 @@ import time
 motors = robot.Motors()
 proximity_sensors = robot.ProximitySensors()
 button_a = robot.ButtonA()
+button_b = robot.ButtonB()
 display = robot.Display()
 rgb_leds = robot.RGBLEDs()
 rgb_leds.set_brightness(2)
@@ -83,6 +84,7 @@ def draw_text():
         display.text("A: Stop motors", 0, 0, 1)
     else:
         display.text("A: Start motors", 0, 0, 1)
+    display.text("B: Exit", 0, 10)
 
 def set_front_rgb_leds(front_left, front, front_right):
     rgb_leds.set(5, front_left)
@@ -110,6 +112,10 @@ while True:
         else:
             stop()
         draw_text()
+
+    if button_b.check() == True:
+        stop()
+        break
 
     # Update the display.
     display.fill_rect(0, 24, 48, 8, 0)
