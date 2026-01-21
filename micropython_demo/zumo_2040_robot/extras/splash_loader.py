@@ -1,7 +1,12 @@
 def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     from zumo_2040_robot.display import Display
+    import os
     display = Display()
     splash = None
+    
+    if not(default_program in os.listdir()):
+        default_program = None
+            
     if splash_delay_s:
         # Display the splash screen ASAP.
         splash = display.load_pbm("zumo_2040_robot/extras/splash.pbm")
@@ -158,7 +163,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         from math import exp
 
         start_ms = time.ticks_ms()
-        options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main.py")
+        options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main_menu.py")
         options += ["bootloader", "exit to REPL"]
 
         menu = Menu(options)
