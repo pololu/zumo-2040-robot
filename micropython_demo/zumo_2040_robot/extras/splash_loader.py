@@ -12,6 +12,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     rgb_leds = None
     pwm = None
     display = None
+    selected_menu_option = 0
     
     def init_vars():
         from zumo_2040_robot.display import Display
@@ -162,17 +163,24 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         #sys.exit(0)
 
     def menu():
+        run_menu = True
+        while run_menu:
+            run_menu = run_menu_once()
+
+    def run_menu_once():
         from zumo_2040_robot.extras.menu import Menu
         import os
         import time
         from math import exp
-        nonlocal display, button_a, button_b, button_c, battery
+        nonlocal display, button_a, button_b, button_c, battery, selected_menu_option
 
+        init_vars()
         start_ms = time.ticks_ms()
         options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main_menu.py")
         options += ["bootloader", "exit to REPL"]
 
         menu = Menu(options)
+        menu.index = selected_menu_option
         menu.display = display
         menu.buzzer = buzzer
         menu.previous_button = button_a
@@ -203,15 +211,16 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             if i == None:
                 continue
             
+            selected_menu_option = i
             option = options[i]
             if option == "bootloader":
                 run_bootloader()
             elif option == "exit to REPL":
                 run_repl()
-                break
+                return False # do not run again
             else:
                 run_file(option)
-                init_vars()
+                return True # run again
 
     init_vars()
     
