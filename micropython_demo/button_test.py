@@ -23,10 +23,14 @@ while True:
     if button_b.check(): buffer += "B"
     if button_c.check(): buffer += "C"
 
+    if button_b.is_long_pressed():
+        break
+
     if len(buffer) > 16:
         buffer = buffer[16:]
-    display.text("Debounced output", 0, 28)
-    display.text("with A at 500ms:", 0, 36)
-    display.text(buffer, 0, 48)
+    display.text("Hold B to exit.", 0, 28)
+    display.text("Debounced output", 0, 36)
+    display.text("with A at 500ms:", 0, 44)
+    display.text(buffer, 0, 56)
 
     display.show()

@@ -20,6 +20,7 @@ line_sensors = robot.LineSensors()
 # Note: It's not safe to use Button B in a
 # multi-core program.
 button_a = robot.ButtonA()
+button_c = robot.ButtonC()
 
 max_speed = 6000
 calibration_speed = 3000
@@ -36,6 +37,7 @@ while not button_a.check():
     pass
 
 display.fill(0)
+display.text("Calibrating...", 0, 0)
 display.show()
 time.sleep_ms(500)
 
@@ -66,14 +68,15 @@ line = [0,0,0,0,0]
 starting = False
 run_motors = False
 last_update_ms = 0
+stop_thread = False
 
 def update_display():
     display.fill(0)
     display.text("Line Follower", 0, 0)
     if starting:
-        display.text("Press A to stop", 0, 10)
+        display.text("A: stop  C: exit", 0, 10)
     else:
-        display.text("Press A to start", 0, 10)
+        display.text("A: start C: exit", 0, 10)
 
     ms = (t2 - t1)/1000
     display.text(f"Main loop: {ms:.1f}ms", 0, 20)
@@ -93,8 +96,8 @@ def update_display():
 
 def follow_line():
     last_p = 0
-    global p, ir, t1, t2, line, max_speed, run_motors
-    while True:
+    global p, ir, t1, t2, line, max_speed, run_motors, stop_thread
+    while not stop_thread:
         # save a COPY of the line sensor data in a global variable
         # to allow the other thread to read it safely.
         line = line_sensors.read_calibrated()[:]
@@ -126,27 +129,35 @@ def follow_line():
             motors.set_speeds(left, right)
         else:
             motors.off()
+    motors.off()
 
-# Sleep immediately after starting a thread to work around this bug:
-# https://github.com/micropython/micropython/issues/10621
-_thread.start_new_thread(follow_line, ())
-time.sleep_ms(1)
+try:
+    # Sleep immediately after starting a thread to work around this bug:
+    # https://github.com/micropython/micropython/issues/10621
+    _thread.start_new_thread(follow_line, ())
+    time.sleep_ms(1)
 
-while True:
-    x = max_speed
-    t = time.ticks_ms()
+    while True:
+        x = max_speed
+        t = time.ticks_ms()
 
-    if time.ticks_diff(t, last_update_ms) > 100:
-        last_update_ms = t
-        update_display()
+        if time.ticks_diff(t, last_update_ms) > 100:
+            last_update_ms = t
+            update_display()
 
-    if button_a.check():
-        if not starting:
-            starting = True
-            start_ms = t
-        else:
-            starting = False
-            run_motors = False
+        if button_a.check():
+            if not starting:
+                starting = True
+                start_ms = t
+            else:
+                starting = False
+                run_motors = False
 
-    if starting and time.ticks_diff(t, start_ms) > 1000:
-        run_motors = True
+        if button_c.check():
+            break
+
+        if starting and time.ticks_diff(t, start_ms) > 1000:
+            run_motors = True
+
+finally:
+    stop_thread = True

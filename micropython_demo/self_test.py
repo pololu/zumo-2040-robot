@@ -409,17 +409,19 @@ def run_test():
             time.sleep_ms(1000)
 
     display_line_break()
-    display_centered_text('PASS')
+    display_centered_text('      PASS    <B')
     for i in range(6):
         rgb_leds.set(i, GREEN)
     rgb_leds.show()
     buzzer.play_in_background(BEEP_PASS)
-    while True:
+    while not button_b.check():
         machine.idle()
 
 try:
     run_test()
 except TestError as te:
     show_test_error(te)
-    while True:
+    while not button_b.check():
         machine.idle()
+
+rgb_leds.off()

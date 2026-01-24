@@ -1,49 +1,60 @@
 def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
-    from zumo_2040_robot.display import Display
-    display = Display()
-    splash = None
-    if splash_delay_s:
-        # Display the splash screen ASAP.
-        splash = display.load_pbm("zumo_2040_robot/extras/splash.pbm")
-        display.blit(splash, 0, 0)
-        display.show()
-
     welcome_song = "O5 e64a64 O6 msl32 d v12 d v10 d v8 d v6 d16"
     button_a_beep = "!c32"
     button_b_beep = "!e32"
     button_c_beep = "!g32"
 
-    from zumo_2040_robot.buttons import ButtonA, ButtonB, ButtonC
-    from zumo_2040_robot.buzzer import Buzzer
-    from zumo_2040_robot.battery import Battery
-    from zumo_2040_robot.rgb_leds import RGBLEDs
-    from zumo_2040_robot.yellow_led import YellowLED
-    import time
-    from machine import PWM
+    button_a = None
+    button_b = None
+    button_c = None
+    battery = None
+    buzzer = None
+    rgb_leds = None
+    pwm = None
+    display = None
+    selected_menu_option = 0
+    
+    def init_vars():
+        from zumo_2040_robot.display import Display
+        from zumo_2040_robot.buttons import ButtonA, ButtonB, ButtonC
+        from zumo_2040_robot.buzzer import Buzzer
+        from zumo_2040_robot.battery import Battery
+        from zumo_2040_robot.rgb_leds import RGBLEDs
+        from zumo_2040_robot.yellow_led import YellowLED
+        from machine import PWM
 
-    button_a = ButtonA()
-    button_b = ButtonB()
-    button_c = ButtonC()
-    battery = Battery()
-    buzzer = Buzzer() # turns off buzzer
-    rgb_leds = RGBLEDs() # turns off RGB LEDs
-    rgb_leds.set_brightness(4)
+        nonlocal button_a, button_b, button_c, battery, buzzer, rgb_leds, pwm
+        nonlocal display
+        display = Display()
+        button_a = ButtonA()
+        button_b = ButtonB()
+        button_c = ButtonC()
+        battery = Battery()
+        buzzer = Buzzer() # turns off buzzer
+        rgb_leds = RGBLEDs() # turns off RGB LEDs
+        rgb_leds.set_brightness(4)
 
-    # Initialize a PWM on the yellow LED at 0% duty cycle, which
-    # corresponds to full brightness.  We can't initialize PWM with
-    # the LED off so we'll just have it on for a while.
-    pwm = PWM(YellowLED().pin)
-    pwm.freq(1000)
-    pwm.duty_u16(0)
+        # Initialize a PWM on the yellow LED at 0% duty cycle, which
+        # corresponds to full brightness.  We can't initialize PWM with
+        # the LED off so we'll just have it on for a while.
+        pwm = PWM(YellowLED().pin)
+        pwm.freq(1000)
+        pwm.duty_u16(0)
+        
+    def leds_off():
+        from zumo_2040_robot.yellow_led import YellowLED
+        nonlocal rgb_leds
+        rgb_leds.off()
+        YellowLED() # turns off the LED even from PWM
 
     def del_vars():
-        nonlocal display, splash, button_a, button_b, button_c, battery
+        nonlocal display, button_a, button_b, button_c, battery
         nonlocal buzzer, rgb_leds, pwm
 
         pwm.deinit()
-        YellowLED() # turn off yellow LED and reset to an output
+        leds_off()
 
-        del display, splash, button_a, button_b, button_c, battery
+        del display, button_a, button_b, button_c, battery
         del buzzer, rgb_leds, pwm
 
     def read_button():
@@ -53,6 +64,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         return None
 
     def initial_screen():
+        import time
         start = time.ticks_ms()
         while True:
             if button_a.is_pressed():
@@ -104,8 +116,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         return None
 
     def run_file(filename):
-        rgb_leds.off()
-        YellowLED() # turns off the LED even from PWM
+        import time
+        leds_off()
         if run_file_delay_ms:
             display.fill(0)
             display.text('Run file:', 0, 0)
@@ -121,8 +133,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
     # Runs the bootloader in the RP2040's Bootrom.
     def run_bootloader():
-        rgb_leds.off()
-        YellowLED() # turns off the LED even from PWM
+        import time
+        leds_off()
         if run_file_delay_ms:
             display.fill(0)
             display.text('Bootloader...', 0, 0)
@@ -138,8 +150,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     # You can also run the REPL by letting the interpreter reach the end of
     # your program or by sending Ctrl+C to the USB virtual serial port.
     def run_repl():
-        rgb_leds.off()
-        YellowLED() # turns off the LED even from PWM
+        import time
+        leds_off()
         if run_file_delay_ms:
             display.fill(0)
             display.text('exit to REPL...', 0, 0)
@@ -148,20 +160,27 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         display.fill(0)
         display.show()
         import sys
-        sys.exit(0)
+        #sys.exit(0)
 
     def menu():
-        rgb_leds.off()
+        run_menu = True
+        while run_menu:
+            run_menu = run_menu_once()
 
+    def run_menu_once():
         from zumo_2040_robot.extras.menu import Menu
         import os
+        import time
         from math import exp
+        nonlocal display, button_a, button_b, button_c, battery, selected_menu_option
 
+        init_vars()
         start_ms = time.ticks_ms()
-        options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main.py")
+        options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main_menu.py")
         options += ["bootloader", "exit to REPL"]
 
         menu = Menu(options)
+        menu.index = selected_menu_option
         menu.display = display
         menu.buzzer = buzzer
         menu.previous_button = button_a
@@ -170,7 +189,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         i = None
         mv = None
 
-        while i == None:
+        while True:
             t = time.ticks_ms()
             elapsed_ms = time.ticks_diff(t, start_ms)
 
@@ -189,13 +208,33 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
             i = menu.update()
 
-        option = options[i]
-        if option == "bootloader":
-            run_bootloader()
-        elif option == "exit to REPL":
-            run_repl()
-        else:
-            run_file(option)
+            if i == None:
+                continue
+            
+            selected_menu_option = i
+            option = options[i]
+            if option == "bootloader":
+                run_bootloader()
+            elif option == "exit to REPL":
+                run_repl()
+                return False # do not run again
+            else:
+                run_file(option)
+                return True # run again
+
+    init_vars()
+    
+    import os
+    splash = None
+    
+    if not(default_program in os.listdir()):
+        default_program = None
+            
+    if splash_delay_s:
+        # Display the splash screen ASAP.
+        splash = display.load_pbm("zumo_2040_robot/extras/splash.pbm")
+        display.blit(splash, 0, 0)
+        display.show()
 
     if button_a.is_pressed():
         run_file("self_test.py")
@@ -206,6 +245,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         buzzer.play_in_background(welcome_song)
         button = initial_screen()
 
+    del splash # done with this var
+    
     if button == None:
         if default_program:
             run_file(default_program)
