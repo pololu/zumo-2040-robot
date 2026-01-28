@@ -1,4 +1,12 @@
 def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
+    from zumo_2040_robot.display import Display
+    display = Display()
+    if splash_delay_s:
+        # Display the splash screen ASAP.
+        splash = display.load_pbm("zumo_2040_robot/extras/splash.pbm")
+        display.blit(splash, 0, 0)
+        display.show()
+
     welcome_song = "O5 e64a64 O6 msl32 d v12 d v10 d v8 d v6 d16"
     button_a_beep = "!c32"
     button_b_beep = "!e32"
@@ -11,10 +19,13 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     buzzer = None
     rgb_leds = None
     pwm = None
-    display = None
     selected_menu_option = 0
     
     def init_vars():
+        nonlocal button_a, button_b, button_c, battery, buzzer, rgb_leds, pwm
+        nonlocal display
+        if pwm is not None: return
+
         from zumo_2040_robot.display import Display
         from zumo_2040_robot.buttons import ButtonA, ButtonB, ButtonC
         from zumo_2040_robot.buzzer import Buzzer
@@ -23,9 +34,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         from zumo_2040_robot.yellow_led import YellowLED
         from machine import PWM
 
-        nonlocal button_a, button_b, button_c, battery, buzzer, rgb_leds, pwm
-        nonlocal display
-        display = Display()
+        if display is None: display = Display()
         button_a = ButtonA()
         button_b = ButtonB()
         button_c = ButtonC()
@@ -54,8 +63,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         pwm.deinit()
         leds_off()
 
-        del display, button_a, button_b, button_c, battery
-        del buzzer, rgb_leds, pwm
+        display = button_a = button_b = button_c = battery = \
+          buzzer = rgb_leds = pwm = None
 
     def read_button():
         if button_a.is_pressed(): return "A"
@@ -87,7 +96,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
                 offset = 0
             else:
                 offset = max(-32, -32 * (elapsed - 1000) // 400)
-            display.blit(splash, 0, offset)
+            if splash: display.blit(splash, 0, offset)
             display.text('Push C for menu', 0, 68+offset)
             display.text(f"Default ({countdown_s}s):", 0, 78+offset)
 
@@ -170,7 +179,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         import os
         import time
         from math import exp
-        nonlocal display, button_a, button_b, button_c, battery, selected_menu_option
+        nonlocal selected_menu_option
 
         init_vars()
         start_ms = time.ticks_ms()
@@ -223,15 +232,9 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     init_vars()
     
     import os
-    splash = None
     
     if not(default_program in os.listdir()):
         default_program = None
-            
-    if splash_delay_s:
-        splash = display.load_pbm("zumo_2040_robot/extras/splash.pbm")
-        display.blit(splash, 0, 0)
-        display.show()
 
     if button_a.is_pressed():
         run_file("self_test.py")
