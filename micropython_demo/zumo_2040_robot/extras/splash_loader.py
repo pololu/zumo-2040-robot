@@ -20,8 +20,11 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     rgb_leds = None
     pwm = None
     selected_menu_option = 0
-    
+
     def init_vars():
+        from zumo_2040_robot.motors import Motors
+        Motors()  # turn off motors ASAP
+
         nonlocal button_a, button_b, button_c, battery, buzzer, rgb_leds, pwm
         nonlocal display
         if pwm is not None: return
@@ -49,7 +52,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         pwm = PWM(YellowLED().pin)
         pwm.freq(1000)
         pwm.duty_u16(0)
-        
+
     def leds_off():
         from zumo_2040_robot.yellow_led import YellowLED
         nonlocal rgb_leds
@@ -175,13 +178,13 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             run_menu = run_menu_once()
 
     def run_menu_once():
+        init_vars()
         from zumo_2040_robot.extras.menu import Menu
         import os
         import time
         from math import exp
         nonlocal selected_menu_option
 
-        init_vars()
         start_ms = time.ticks_ms()
         options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main_menu.py")
         options += ["bootloader", "exit to REPL"]
@@ -196,7 +199,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         i = None
         mv = None
 
-        while True:
+        while i is None:
             t = time.ticks_ms()
             elapsed_ms = time.ticks_diff(t, start_ms)
 
@@ -215,24 +218,21 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
             i = menu.update()
 
-            if i == None:
-                continue
-            
-            selected_menu_option = i
-            option = options[i]
-            if option == "bootloader":
-                run_bootloader()
-            elif option == "exit to REPL":
-                run_repl()
-                return False # do not run again
-            else:
-                run_file(option)
-                return True # run again
+        selected_menu_option = i
+        option = options[i]
+        if option == "bootloader":
+            run_bootloader()
+        elif option == "exit to REPL":
+            run_repl()
+            return False # do not run again
+        else:
+            run_file(option)
+            return True # run again
 
     init_vars()
-    
+
     import os
-    
+
     if not(default_program in os.listdir()):
         default_program = None
 
@@ -246,7 +246,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         button = initial_screen()
 
     del splash # done with this var
-    
+
     if button == None:
         if default_program:
             run_file(default_program)
