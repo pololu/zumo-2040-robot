@@ -146,9 +146,9 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         buzzer.off()
         machine.bootloader()
 
-    # Runs the Python REPL using sys.exit().
-    # You can also run the REPL by letting the interpreter reach the end of
-    # your program or by sending Ctrl+C to the USB virtual serial port.
+    # Notifies the user that we are about to run the REPL.
+    # After returning, we run the REPL by allowing program to end.
+    # You can also run the REPL by sending Ctrl+C to USB.
     def run_repl():
         import time
         leds_off()
@@ -159,8 +159,6 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             time.sleep_ms(run_file_delay_ms)
         display.fill(0)
         display.show()
-        import sys
-        #sys.exit(0)
 
     def menu():
         run_menu = True
@@ -231,7 +229,6 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         default_program = None
             
     if splash_delay_s:
-        # Display the splash screen ASAP.
         splash = display.load_pbm("zumo_2040_robot/extras/splash.pbm")
         display.blit(splash, 0, 0)
         display.show()
