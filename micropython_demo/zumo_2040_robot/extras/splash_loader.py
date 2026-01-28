@@ -76,18 +76,23 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         return None
 
     def initial_screen():
+        buzzer.play_in_background(welcome_song)
+        button = None
         import time
         start = time.ticks_ms()
         while True:
             if button_a.is_pressed():
                 buzzer.play_in_background(button_a_beep)
-                return "A"
+                button = "A"
+                break
             if button_b.is_pressed():
                 buzzer.play_in_background(button_b_beep)
-                return "B"
+                button = "B"
+                break
             if button_c.is_pressed():
                 buzzer.play_in_background(button_c_beep)
-                return "C"
+                button = "C"
+                break
 
             elapsed = time.ticks_ms() - start
             countdown_s = splash_delay_s - elapsed//1000
@@ -124,8 +129,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
                     rgb_leds.set(4-i, [0, 0, 0])
                     rgb_leds.set((4+i)%6, [0, 0, 0])
             rgb_leds.show()
-
-        return None
+        rgb_leds.off()
+        return button
 
     def run_file(filename):
         import time
@@ -242,7 +247,6 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     button = read_button()
 
     if button == None and splash_delay_s != 0:
-        buzzer.play_in_background(welcome_song)
         button = initial_screen()
 
     del splash # done with this var
