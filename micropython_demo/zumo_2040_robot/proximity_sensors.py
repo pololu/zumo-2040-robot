@@ -5,8 +5,6 @@ from time import sleep_us
 DEFAULT_FREQ = const(56000)
 DEFAULT_BRIGHTNESS_LEVELS = [313, 1000, 2063, 3500, 5375, 7563]
 
-_ir_pulses = None
-
 class IRPulses:
     def __init__(self):
         self.left_pulses_pin = Pin(17, Pin.OUT, value=0)
@@ -39,10 +37,7 @@ class IRPulses:
 
 class ProximitySensors:
     def __init__(self):
-        global _ir_pulses
-        if not _ir_pulses:
-            _ir_pulses = IRPulses()
-        self.ir_pulses = _ir_pulses
+        self.ir_pulses = IRPulses()
 
         self.set_frequency(DEFAULT_FREQ)
         self.brightness_levels = DEFAULT_BRIGHTNESS_LEVELS
